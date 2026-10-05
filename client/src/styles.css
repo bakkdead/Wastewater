@@ -69,3 +69,56 @@ button:disabled { opacity: .5; cursor: not-allowed; }
   .field.full { grid-column: auto; }
   .actions, .actions > div { flex-direction: column; align-items: stretch; }
 }
+
+.headerActions { display: flex; gap: 10px; flex-wrap: wrap; }
+.layoutCard { grid-column: 1 / -1; }
+.layoutHeader { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
+.badge { padding: 8px 12px; border-radius: 999px; font-weight: 700; font-size: 13px; white-space: nowrap; }
+.badge.good { background: #e8f7ee; color: #17663b; }
+.badge.bad { background: #fdeaea; color: #a12626; }
+.layoutStats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 18px 0; }
+.layoutStats div { border: 1px solid #e2e7ed; border-radius: 10px; padding: 12px; background: #fafbfc; }
+.layoutStats span, .layoutStats strong { display: block; }
+.layoutStats span { color: #667085; font-size: 12px; margin-bottom: 4px; }
+.layoutStats strong { font-size: 15px; }
+.warning { border: 1px solid #efb3b3; background: #fff3f3; color: #8d2525; padding: 11px 13px; border-radius: 8px; margin-bottom: 14px; }
+.svgWrap { overflow-x: auto; border: 1px solid #dfe4ea; border-radius: 12px; background: #f8fafc; padding: 10px; }
+.svgWrap svg { display: block; min-width: 760px; width: 100%; height: auto; }
+.containerRect { fill: #eef2f6; stroke: #59636e; stroke-width: 3; }
+.skidRect { fill: none; stroke: #2563eb; stroke-width: 3; stroke-dasharray: 9 6; }
+.skidRect.danger { stroke: #c62828; }
+.tankRect { fill: #dcecf8; stroke: #2878aa; stroke-width: 2; }
+.pumpRect { fill: #f0e4d0; stroke: #9a6a25; stroke-width: 2; }
+.svgTitle { font-size: 16px; font-weight: 700; fill: #25313c; }
+.svgDimension { font-size: 13px; fill: #667085; }
+.equipmentLabel { font-size: 12px; font-weight: 700; fill: #263238; pointer-events: none; }
+.layoutLegend { display: flex; gap: 18px; flex-wrap: wrap; margin: 12px 0 6px; font-size: 13px; color: #475467; }
+.layoutLegend span { display: inline-flex; align-items: center; gap: 7px; }
+.legend { width: 14px; height: 10px; display: inline-block; border-radius: 2px; border: 1px solid; }
+.legend.tank { background: #dcecf8; border-color: #2878aa; }
+.legend.pump { background: #f0e4d0; border-color: #9a6a25; }
+.legend.skid { background: transparent; border-color: #2563eb; border-style: dashed; }
+@media (max-width: 850px) {
+  .layoutStats { grid-template-columns: 1fr; }
+  .layoutHeader { flex-direction: column; }
+}
+@media (min-width: 901px) {
+  .layout > .layoutCard { grid-column: 1 / -1; grid-row: 2; }
+  .layout > aside.card { grid-column: 2; grid-row: 1; }
+}
+.calculateBox { margin-top: 28px; padding: 18px; border: 1px solid #cfe0e5; border-radius: 14px; background: #f6fafb; }
+.calculateBox h3 { margin: 0 0 6px; }
+.resultsCard { grid-column: 1 / 2; }
+.resultGrid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin:20px 0 24px; }
+.resultGrid div, .equipmentTable div { padding:14px; border:1px solid #dce8ec; border-radius:10px; background:#f9fbfc; display:flex; justify-content:space-between; gap:16px; }
+.resultGrid span, .equipmentTable span { color:#637b87; }
+.equipmentTable { display:grid; gap:8px; margin:12px 0 20px; }
+@media(max-width:650px){.resultGrid{grid-template-columns:1fr}}
+
+.badge.neutral { background:#eef2f6; color:#52616b; }
+.engineeringGrid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin:12px 0 24px; }
+.resultGroup { border:1px solid #dce8ec; border-radius:10px; background:#f9fbfc; padding:14px; display:grid; gap:6px; }
+.resultGroup span { color:#637b87; font-size:12px; text-transform:uppercase; letter-spacing:.6px; font-weight:700; }
+.resultGroup strong { font-size:14px; }
+.notice { border:1px solid #f0d9a6; background:#fffaf0; color:#75551c; padding:11px 13px; border-radius:8px; margin:12px 0; }
+@media(max-width:650px){.engineeringGrid{grid-template-columns:1fr}}

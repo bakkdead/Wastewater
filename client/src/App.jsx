@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { sections, initialValues } from "./inputParameters.js";
 import { validate } from "./validation.js";
+import { calculateDesign, calculateSkidLayout, normaliseCsc56Output } from "./calcEngine.js";
 
 const API = "http://localhost:3001/api";
 
@@ -26,6 +27,9 @@ export default function App() {
   const [editingId, setEditingId] = useState(null);
   const [status, setStatus] = useState("");
   const [step, setStep] = useState(0);
+  const [design, setDesign] = useState(null);
+  const [selectedEquipment, setSelectedEquipment] = useState(null);
+  const [calcError, setCalcError] = useState("");
 
   const currentSection = sections[step];
   const progress = Math.round(((step + 1) / sections.length) * 100);
@@ -114,6 +118,7 @@ export default function App() {
     setErrors({});
     setStep(0);
     setStatus("Started a new questionnaire.");
+    setDesign(null); setSelectedEquipment(null); setCalcError("");
   };
 
   const estimatedDose = useMemo(() => {
@@ -123,6 +128,40 @@ export default function App() {
     return peak && dose && factor ? peak * dose * factor : null;
   }, [values.peakFlowM3h, values.titrationDoseMlPerL, values.dosingSafetyFactor]);
 
+  const layout = useMemo(() => {
+    try { return calculateSkidLayout(values, selectedEquipment); }
+    catch { return null; }
+  }, [values, selectedEquipment]);
+
+  const runCalculation = () => {
+    const allErrors = validate(values);
+    setErrors(allErrors);
+    if (Object.keys(allErrors).length) {
+      setCalcError("Please correct the highlighted questionnaire fields before calculating the design.");
+      const firstKey = Object.keys(allErrors)[0];
+      const sectionIndex = sections.findIndex((s) => s.fields.some((f) => f.key === firstKey));
+      if (sectionIndex >= 0) setStep(sectionIndex);
+      return;
+    }
+    try {
+      const rawOutput = calculateDesign(toPayload(values));
+      const result = normaliseCsc56Output(rawOutput);
+      setDesign(result);
+      setSelectedEquipment(result.equipment);
+      setCalcError("");
+      setStatus("Design calculated successfully. Equipment recommendations are ready for the 2D layout.");
+      setTimeout(() => document.getElementById("design-results")?.scrollIntoView({behavior:"smooth"}), 0);
+    } catch (err) {
+      setDesign(null); setSelectedEquipment(null);
+      setCalcError(err.message || "The design could not be calculated.");
+    }
+  };
+
+  const loadSpnExample = () => {
+    setValues({...initialValues, projectName:"SPN Dairy pH Skid Example", siteName:"Example Dairy Facility", wastewaterSource:"Mixed dairy wastewater", averageFlowM3h:8, peakFlowM3h:12, operatingHoursPerDay:16, currentPh:5.2, targetPh:7, temperatureC:25, fogMgL:650, tssMgL:800, codMgL:3200, alkalinityMgLCaCO3:250, upstreamTreatment:"Screening and DAF", dischargePhMin:6, dischargePhMax:10, chemicalType:"alkali", chemicalName:"Sodium hydroxide", chemicalConcentrationPct:25, chemicalDensityKgL:1.28, titrationDoseMlPerL:0.8, dosingSafetyFactor:1.2, storageDays:7, maxSkidLengthM:5.9, maxSkidWidthM:2.35, maxSkidHeightM:2.5, powerSupply:"400 V three phase", controlMode:"Local automatic pH control", communicationProtocol:"Modbus TCP"});
+    setErrors({}); setDesign(null); setSelectedEquipment(null); setCalcError(""); setStep(0); setStatus("SPN demonstration example loaded. Review the inputs, then calculate the design.");
+  };
+
   return (
     <div className="app">
       <header className="hero">
@@ -131,7 +170,7 @@ export default function App() {
           <h1>Wastewater Skid Design Questionnaire</h1>
           <p>Guided plant and wastewater data entry for preliminary pH-correction skid design.</p>
         </div>
-        <button className="secondary" onClick={startNew}>New questionnaire</button>
+        <div className="headerActions"><button className="secondary" onClick={loadSpnExample}>Load SPN example</button><button className="secondary" onClick={() => document.getElementById("skid-layout")?.scrollIntoView({ behavior: "smooth" })}>2D skid layout</button><button className="secondary" onClick={startNew}>New questionnaire</button></div>
       </header>
 
       <div className="layout">
@@ -196,8 +235,101 @@ export default function App() {
             </div>
           </div>
 
+          <div className="calculateBox">
+            <h3>Ready to generate the preliminary design?</h3>
+            <p className="muted">Validate the questionnaire, run the calculation engine, then pass its equipment recommendations into the layout.</p>
+            <button className="primary" onClick={runCalculation}>Calculate Skid Design</button>
+          </div>
+          {calcError && <div className="warning">{calcError}</div>}
           {status && <div className="status">{status}</div>}
         </main>
+
+        {design && <section id="design-results" className="card resultsCard">
+          <p className="eyebrow">CSC-56 STRUCTURED OUTPUT</p>
+          <h2>Preliminary Design Results</h2>
+          <p className="muted">One structured calculation result feeds the summary, equipment recommendations and 2D layout.</p>
+
+          <div className="resultGrid">
+            <div><span>Peak wastewater flow</span><strong>{design.inputs.peakFlow.toFixed(2)} m³/h</strong></div>
+            <div><span>pH correction</span><strong>{design.inputs.currentPh} → {design.inputs.targetPh}</strong></div>
+            <div><span>Peak chemical dose</span><strong>{design.dosing.chemicalFlowLh.toFixed(2)} L/h</strong></div>
+            <div><span>Daily chemical use</span><strong>{design.dosing.dailyChemicalL.toFixed(1)} L/day</strong></div>
+          </div>
+
+          <h3>Tank, pump, pipe & dosing results</h3>
+          <div className="engineeringGrid">
+            <div className="resultGroup">
+              <span>Tanks</span>
+              <strong>Equalisation: {design.tanks.equalisationL.toLocaleString()} L</strong>
+              <strong>pH correction: {design.tanks.correctionL.toLocaleString()} L</strong>
+              <strong>Chemical: {design.tanks.chemicalStorageL.toLocaleString()} L</strong>
+            </div>
+            <div className="resultGroup">
+              <span>Pumps</span>
+              <strong>Feed: ≥ {design.pumps.feedM3h} m³/h</strong>
+              <strong>Dosing: ≥ {design.pumps.dosingLh} L/h</strong>
+            </div>
+            <div className="resultGroup">
+              <span>Pipe sizing</span>
+              <strong>Process: {design.pipes.processNominal}</strong>
+              <strong>Dosing: {design.pipes.dosingNominal}</strong>
+            </div>
+            <div className="resultGroup">
+              <span>Chemical dosing</span>
+              <strong>{design.dosing.chemical}</strong>
+              <strong>{design.dosing.chemicalFlowLh.toFixed(2)} L/h peak</strong>
+              <strong>{design.dosing.storageL.toFixed(0)} L calculated storage</strong>
+            </div>
+          </div>
+
+          <h3>Equipment recommendations</h3>
+          <div className="equipmentTable">
+            {design.equipment.map(eq => <div key={eq.id}><span>{eq.label}</span><strong>{eq.recommendation}</strong></div>)}
+          </div>
+
+          {design.warnings?.map((warning, i) => <div className="notice" key={i}>{warning}</div>)}
+          <button className="primary" onClick={() => document.getElementById("skid-layout")?.scrollIntoView({behavior:"smooth"})}>
+            View 2D Skid Layout
+          </button>
+        </section>}
+
+        <section id="skid-layout" className="card layoutCard">
+          <div className="layoutHeader">
+            <div>
+              <p className="eyebrow">CALC ENGINE OUTPUT</p>
+              <h2>2D Skid Layout</h2>
+              <p className="muted">Top-down conceptual placement generated from the questionnaire inputs.</p>
+            </div>
+            <div className={!layout ? "badge neutral" : layout.withinLimits ? "badge good" : "badge bad"}>
+              {layout ? (layout.withinLimits ? "Within footprint" : "Footprint exceeded") : "Calculate first"}
+            </div>
+          </div>
+          {!layout ? <div className="warning">Complete the questionnaire and calculate the design before generating the equipment layout.</div> : <>
+          <div className="layoutStats">
+            <div><span>20 ft container</span><strong>{layout.container.length.toFixed(2)} m × {layout.container.width.toFixed(2)} m</strong></div>
+            <div><span>Generated skid</span><strong>{layout.usedLength.toFixed(2)} m × {layout.usedWidth.toFixed(2)} m</strong></div>
+            <div><span>Equipment</span><strong>{layout.equipment.length} items</strong></div>
+          </div>
+          {!layout.withinLimits && <div className="warning">The calculated equipment footprint exceeds the available container/skid footprint. Adjust the skid constraints or equipment inputs.</div>}
+          <div className="svgWrap">
+            <svg viewBox="0 0 900 430" role="img" aria-label="Top-down 2D skid layout">
+              <rect x="35" y="35" width="830" height="330" rx="8" className="containerRect" />
+              <text x="55" y="28" className="svgTitle">20 ft container footprint</text>
+              <text x="450" y="408" textAnchor="middle" className="svgDimension">Length: {layout.container.length.toFixed(2)} m</text>
+              <text x="15" y="205" transform="rotate(-90 15 205)" textAnchor="middle" className="svgDimension">Width: {layout.container.width.toFixed(2)} m</text>
+              <rect x="58" y="58" width={layout.canvasSkid.width} height={layout.canvasSkid.height} className={layout.withinLimits ? "skidRect" : "skidRect danger"} />
+              {layout.equipment.map((eq) => (
+                <g key={eq.id}>
+                  <rect x={58 + eq.x} y={58 + eq.y} width={eq.w} height={eq.h} rx={eq.type === "tank" ? 10 : 5} className={eq.type === "tank" ? "tankRect" : "pumpRect"} />
+                  <text x={58 + eq.x + eq.w / 2} y={58 + eq.y + eq.h / 2} textAnchor="middle" dominantBaseline="middle" className="equipmentLabel">{eq.label}</text>
+                </g>
+              ))}
+            </svg>
+          </div>
+          <div className="layoutLegend"><span><i className="legend tank"></i>Tank</span><span><i className="legend pump"></i>Pump / control</span><span><i className="legend skid"></i>Skid frame</span></div>
+          <small className="help">Conceptual layout only. Equipment recommendations are passed from the calculation engine and should be verified by the engineering design.</small>
+          </>}
+        </section>
 
         <aside className="card">
           <h2>Saved inputs</h2>
