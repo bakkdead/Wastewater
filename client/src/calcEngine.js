@@ -1,3 +1,5 @@
+import { selectEquipment } from "./equipmentDatabase.js";
+
 /**
  * Final prototype calculation / integration layer.
  * The actual approved CSC-56 schema was not supplied with the previous ZIP.
@@ -52,7 +54,17 @@ export function calculateDesign(values) {
     { id:"dose-pump", type:"pump", label:"Dosing Pump", recommendation:`≥ ${dosingPumpLh} L/h`, length:0.65, width:0.40 },
     { id:"control", type:"control", label:"Control Panel", recommendation: values.controlMode || "Automatic pH control", length:0.75, width:0.35 }
   ];
-
+const equipmentSelection = selectEquipment({
+  tanks: {
+    equalisationL: equalisationTankL,
+    correctionL: correctionTankL,
+    chemicalStorageL: dosingTankL
+  },
+  pumps: {
+    feedM3h: feedPumpM3h,
+    dosingLh: dosingPumpLh
+  }
+});
   return {
     schema: "CSC-56-PROTOTYPE",
     version: 1,
@@ -72,7 +84,11 @@ export function calculateDesign(values) {
     pumps: { feedM3h: feedPumpM3h, dosingLh: dosingPumpLh },
     pipes: { processNominal: processPipe, dosingNominal: dosingPipe },
     equipment,
-    warnings: ["Concept-level prototype sizing only; final engineering verification is required."]
+    equipmentSelection,
+    warnings: [
+      "Concept-level prototype sizing only; final engineering verification is required.",
+      ...equipmentSelection.warnings
+     ]
   };
 }
 
