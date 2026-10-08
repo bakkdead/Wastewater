@@ -1,5 +1,5 @@
 import { selectEquipment } from "./equipmentDatabase.js";
-
+import { evaluateSkidFeasibility } from "./skidFeasibility.js";
 /**
  * Final prototype calculation / integration layer.
  * The actual approved CSC-56 schema was not supplied with the previous ZIP.
@@ -65,6 +65,15 @@ const equipmentSelection = selectEquipment({
     dosingLh: dosingPumpLh
   }
 });
+
+const skidFeasibility = evaluateSkidFeasibility(
+  equipmentSelection,
+  {
+    maxSkidLengthM: Number(values.maxSkidLengthM) || 5.90,
+    maxSkidWidthM: Number(values.maxSkidWidthM) || 2.35
+  }
+);
+
   return {
     schema: "CSC-56-PROTOTYPE",
     version: 1,
@@ -85,6 +94,7 @@ const equipmentSelection = selectEquipment({
     pipes: { processNominal: processPipe, dosingNominal: dosingPipe },
     equipment,
     equipmentSelection,
+    skidFeasibility,
     warnings: [
       "Concept-level prototype sizing only; final engineering verification is required.",
       ...equipmentSelection.warnings
