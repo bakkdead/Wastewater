@@ -94,6 +94,7 @@ const skidFeasibility = evaluateSkidFeasibility(
     pipes: { processNominal: processPipe, dosingNominal: dosingPipe },
     equipment,
     equipmentSelection,
+    equipmentMatched: equipmentSelection.allSuitable,
     skidFeasibility,
     warnings: [
       "Concept-level prototype sizing only; final engineering verification is required.",

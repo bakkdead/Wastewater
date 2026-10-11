@@ -120,6 +120,24 @@ export default function App() {
     }
   };
 
+  const deleteSaved = async (id) => {
+    if (!window.confirm(`Delete saved questionnaire #${id}? This cannot be undone.`)) return;
+    try {
+      const res = await fetch(`${API}/submissions/${id}`, { method: "DELETE" });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setStatus(body.error || `Could not delete questionnaire #${id}.`);
+        return;
+      }
+      setSaved((previous) => previous.filter((item) => item.id !== id));
+      if (editingId === id) { setEditingId(null); setDesign(null); setSelectedEquipment(null); }
+      setStatus(`Deleted saved questionnaire #${id}.`);
+      await loadSaved();
+    } catch {
+      setStatus("Could not connect to the server to delete this questionnaire.");
+    }
+  };
+
   const retrieve = async (id) => {
     const res = await fetch(`${API}/submissions/${id}`);
     if (!res.ok) return;
@@ -129,7 +147,10 @@ export default function App() {
     setStep(0);
     setErrors({});
     setStatus(`Loaded submission #${item.id}.`);
+    setDesign(null); setSelectedEquipment(null);
   };
+
+  const goBack = () => setStep(s => Math.max(0, s - 1));
 
   const startNew = () => {
     setValues(initialValues);
@@ -241,13 +262,14 @@ export default function App() {
           )}
 
           <div className="actions">
-            <button className="secondary" onClick={() => setStep((s) => Math.max(0, s - 1))} disabled={step === 0}>
+            <button className="secondary" onClick={goBack} disabled={step === 0}>
               Back
             </button>
             <div>
               <button className="secondary" onClick={save}>
                 {editingId ? "Update saved input" : "Save input"}
               </button>
+              {editingId && <button type="button" className="deleteSavedButton" onClick={() => deleteSaved(editingId)}>Delete this submission</button>}
               {step < sections.length - 1
                 ? <button className="primary" onClick={next}>Next</button>
                 : <button className="primary" onClick={save}>Finish & Save</button>}
@@ -301,10 +323,17 @@ export default function App() {
             </div>
           </div>
 
-          <h3>Equipment recommendations</h3>
+          <h3>Equipment matcher</h3>
+          {!design.equipmentSelection.allSuitable && <div className="warning" role="alert"><strong>No suitable equipment found / current database cannot meet requirement.</strong> One or more capacity requirements exceed the catalogue. Any smaller model is REFERENCE ONLY, not a valid equipment recommendation or complete cost estimate.</div>}
           <div className="equipmentTable">
-            {design.equipment.map(eq => <div key={eq.id}><span>{eq.label}</span><strong>{eq.recommendation}</strong></div>)}
+            {Object.entries(design.equipmentSelection.selections).map(([key, selection]) => (
+              <div key={key}>
+                <span>{({equalisationTank:"Equalisation tank",correctionTank:"pH correction tank",chemicalTank:"Chemical storage tank",feedPump:"Feed pump",dosingPump:"Dosing pump"})[key]}</span>
+                <strong>{selection.suitable ? `Suitable: ${selection.item.name}` : `NO MATCH — closest ${selection.item.name} (reference only, UNDERSIZED)`}</strong>
+              </div>
+            ))}
           </div>
+          <p className="help">Equipment models and capacities are preliminary database entries. The 2D/3D schematic retains fixed illustrative geometry, not catalogue dimensions. {design.equipmentSelection.allSuitable ? `Indicative equipment-only total: AUD $${design.equipmentSelection.preliminaryTotalCostAUD.toLocaleString()}.` : "No valid total price is quoted for an undersized selection."}</p>
 
           {design.warnings?.map((warning, i) => <div className="notice" key={i}>{warning}</div>)}
           <button className="primary" onClick={() => document.getElementById("skid-layout")?.scrollIntoView({behavior:"smooth"})}>
@@ -329,6 +358,7 @@ export default function App() {
             <div><span>Generated skid</span><strong>{layout.usedLength.toFixed(2)} m × {layout.usedWidth.toFixed(2)} m</strong></div>
             <div><span>Equipment</span><strong>{layout.equipment.length} items</strong></div>
           </div>
+          {design && !design.equipmentSelection.allSuitable && <div className="warning">The drawings are conceptual only: equipment database capacity is insufficient. Layout appearance does not establish feasibility.</div>}
           {!layout.withinLimits && <div className="warning">The calculated equipment footprint exceeds the available container/skid footprint. Adjust the skid constraints or equipment inputs.</div>}
           <div className="svgWrap">
             <svg viewBox="0 0 900 430" role="img" aria-label="Top-down 2D skid layout">
@@ -382,15 +412,25 @@ export default function App() {
         </section>
         <aside className="card">
           <h2>Saved inputs</h2>
-          <p className="muted">Retrieve a previous plant questionnaire.</p>
+          <p className="muted">Retrieve or delete a saved plant questionnaire.</p>
           <div className="savedList">
             {saved.length === 0 && <p>No saved questionnaires yet.</p>}
             {saved.map((item) => (
-              <button className="savedItem" key={item.id} onClick={() => retrieve(item.id)}>
-                <strong>{item.project_name}</strong>
-                <span>{item.site_name}</span>
-                <small>Submission #{item.id}</small>
-              </button>
+              <div className="savedEntry" key={item.id}>
+                <button type="button" className="savedItem" onClick={() => retrieve(item.id)}>
+                  <strong>{item.project_name}</strong>
+                  <span>{item.site_name}</span>
+                  <small>Submission #{item.id}</small>
+                </button>
+                <button
+                  type="button"
+                  className="deleteSavedButton"
+                  onClick={() => deleteSaved(item.id)}
+                  aria-label={`Delete saved questionnaire ${item.project_name}, submission ${item.id}`}
+                >
+                  Delete
+                </button>
+              </div>
             ))}
           </div>
         </aside>

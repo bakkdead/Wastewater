@@ -81,6 +81,27 @@ app.put("/api/submissions/:id", async (req, res) => {
   }
 });
 
+// Delete a saved questionnaire by ID. Use a parameterized query to avoid SQL injection.
+app.delete("/api/submissions/:id", async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isSafeInteger(id) || id <= 0) {
+    return res.status(400).json({ error: "Invalid submission ID." });
+  }
+  try {
+    const result = await run(
+      "DELETE FROM questionnaire_submissions WHERE id = ?",
+      [id]
+    );
+    if (!result.changes) {
+      return res.status(404).json({ error: "Saved questionnaire not found." });
+    }
+    res.json({ ok: true, deletedId: id });
+  } catch (error) {
+    console.error("Could not delete questionnaire:", error);
+    res.status(500).json({ error: "Could not delete saved questionnaire." });
+  }
+});
+
 // Serve the built React site and API from the same Render service.
 const distDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../client/dist");
 if (fs.existsSync(distDir)) {

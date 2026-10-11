@@ -1,3 +1,4 @@
+import { findSupportedChemical } from "./chemicals.js";
 const isNumber = (v) => typeof v === "number" && Number.isFinite(v);
 const hasText = (v) => typeof v === "string" && v.trim().length > 0;
 
@@ -73,5 +74,8 @@ export function validateSubmission(data) {
     }
   }
 
+  const chemical = findSupportedChemical(data.chemicalName);
+  if (hasText(data.chemicalName) && !chemical) errors.chemicalName = "Choose a supported chemical; arbitrary text is not allowed.";
+  if (chemical && chemical.type !== data.chemicalType) errors.chemicalName = "Chemical does not match selected acid/alkali type.";
   return errors;
 }

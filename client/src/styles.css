@@ -135,3 +135,11 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .scrollTable { overflow-x:auto; }.featureTable { width:100%; border-collapse:collapse; min-width:640px; }.featureTable th,.featureTable td { padding:11px; text-align:left; border-bottom:1px solid #dde5eb; }.featureTable th { background:#e5eef5; }
 .featureActions { display:flex; gap:12px; flex-wrap:wrap; margin:12px 0; }.messageLog { margin-top:10px; }.messageItem { padding:12px; border:1px solid #dae2eb; border-radius:9px; margin:8px 0; }.messageItem small { margin-left:12px; }.messageItem p { margin:8px 0 0; overflow-wrap:anywhere; }
 .treatmentStages { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:12px; }.treatmentStages>div { background:#f4f8fb; border:1px solid #d9e3ec; padding:14px; border-radius:10px; }.treatmentStages h3 { margin:0 0 8px; }.treatmentStages p { margin:0 0 10px; }.treatmentStages small { font-weight:600; }
+
+/* Saved questionnaire deletion */
+.savedEntry { display:flex; align-items:stretch; gap:10px; margin-bottom:10px; }
+.savedEntry .savedItem { flex:1; min-width:0; }
+.deleteSavedButton { align-self:center; flex-shrink:0; padding:10px 14px; background:#b42318; color:#fff; border:0; border-radius:8px; font-weight:700; cursor:pointer; }
+.deleteSavedButton:hover { background:#912018; }
+.deleteSavedButton:focus-visible { outline:3px solid #f97066; outline-offset:2px; }
+@media (max-width:520px) { .savedEntry { flex-wrap:wrap; } .savedEntry .savedItem { flex-basis:100%; } }

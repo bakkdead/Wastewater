@@ -1,3 +1,5 @@
+import { SUPPORTED_CHEMICALS } from "./chemicals.js";
+
 export const sections = [
   {
     title: "1. Project & Site",
@@ -56,7 +58,7 @@ export const sections = [
           { value: "alkali", label: "Alkali - increase pH" }
         ]
       },
-      { key: "chemicalName", label: "Chemical name", type: "text", required: true, placeholder: "Example: sodium hydroxide" },
+      { key: "chemicalName", label: "Supported neutralising chemical", type: "select", required: true, options: SUPPORTED_CHEMICALS.map(c => ({ value: c.name, label: `${c.name} (${c.formula}) — ${c.type}` })), help: "Choose a listed reagent. Custom chemicals require engineering validation and are not accepted by this prototype." },
       { key: "chemicalConcentrationPct", label: "Chemical concentration (% w/w)", type: "number", min: 0.01, max: 100, step: 0.01, required: true },
       { key: "chemicalDensityKgL", label: "Chemical density (kg/L)", type: "number", min: 0.1, max: 3, step: 0.001, required: true },
       {

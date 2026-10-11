@@ -1,3 +1,4 @@
+import { findSupportedChemical } from "./chemicals.js";
 export function validate(values) {
   const errors = {};
 
@@ -70,5 +71,10 @@ export function validate(values) {
     }
   }
 
+  const chemical = findSupportedChemical(values.chemicalName);
+  if (values.chemicalName && !chemical) errors.chemicalName = "Select a supported chemical from the list.";
+  if (chemical && values.chemicalType && chemical.type !== values.chemicalType) {
+    errors.chemicalName = `Selected reagent is an ${chemical.type}; change chemical type or reagent.`;
+  }
   return errors;
 }

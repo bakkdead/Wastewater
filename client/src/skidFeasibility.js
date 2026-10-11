@@ -178,7 +178,7 @@ export function evaluateSkidFeasibility(
 
     // Retain Sprint 3 preliminary pricing.
     preliminaryTotalCostAUD:
-      equipmentSelection?.preliminaryTotalCostAUD ?? 0,
+      equipmentSelection?.preliminaryTotalCostAUD ?? null,
     currency: equipmentSelection?.currency ?? "AUD",
 
     selectedEquipment: items

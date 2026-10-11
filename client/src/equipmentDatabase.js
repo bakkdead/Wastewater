@@ -41,6 +41,8 @@ function selectSmallestSuitable(items, requiredValue, capacityField, label) {
   if (match) {
     return {
       item: match,
+      suitable: true,
+      requiredValue,
       warning: null
     };
   }
@@ -48,10 +50,12 @@ function selectSmallestSuitable(items, requiredValue, capacityField, label) {
   const closest = sorted[sorted.length - 1];
 
   return {
-    item: closest,
+    item: closest, // reference only; not an approved recommendation
+    suitable: false,
+    requiredValue,
     warning:
-      `No ${label} fully meets the required capacity of ${requiredValue}. ` +
-      `Closest available option ${closest.name} has been selected for preliminary review.`
+      `No suitable equipment found / current database cannot meet requirement: ${label} needs ${Number(requiredValue).toLocaleString()} (${capacityField}), but the largest listed is ${Number(closest[capacityField]).toLocaleString()}. ` +
+      `${closest.name} is shown for reference ONLY and is undersized.`
   };
 }
 
@@ -101,13 +105,15 @@ export function selectEquipment(calculationOutput) {
     .map(selection => selection.warning)
     .filter(Boolean);
 
-  const preliminaryTotalCostAUD = selectedItems.reduce(
+  const allSuitable = Object.values(selections).every(selection => selection.suitable);
+  const preliminaryTotalCostAUD = allSuitable ? selectedItems.reduce(
     (total, item) => total + item.priceAUD,
     0
-  );
+  ) : null; // No valid complete design quotation when any item is undersized.
 
   return {
     selections,
+    allSuitable,
     preliminaryTotalCostAUD,
     currency: "AUD",
     warnings
