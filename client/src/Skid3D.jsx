@@ -3,6 +3,7 @@ import React, { useMemo, useRef, useState } from 'react';
 // True 3D camera projection of equipment meshes (no static image or flat SVG rotation).
 // Built without external WebGL dependencies so it also works on Render with existing packages.
 const W = 900, H = 510;
+const TOP_DOWN = Math.PI / 2;
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const PALETTE = {
   tank: ['#66c6d5', '#3b9eb3', '#278298', '#17677d'],
@@ -85,8 +86,10 @@ export default function Skid3D({layout, values}) {
   if(!layout) return <div className="notice">Calculate the design to generate the interactive 3D schematic.</div>;
   return <div className="threeDPanel">
     <div className="threeDControls">
-      <span><strong>Interactive 3D orbit camera</strong> · drag to rotate · scroll to zoom</span>
+      <span><strong>Interactive 3D orbit camera</strong> · drag to orbit (drag up to look from above) · scroll to zoom</span>
       <div className="threeDButtons">
+        <button type="button" className="secondary" onClick={()=>setElevation(TOP_DOWN)}>Top view</button>
+        <button type="button" className="secondary" onClick={()=>{setAzimuth(-0.72);setElevation(0.64)}}>3D angle</button>
         <button type="button" className="secondary" onClick={()=>setDistance(d=>clamp(d-0.25,0.8,5))}>Zoom +</button>
         <button type="button" className="secondary" onClick={()=>setDistance(d=>clamp(d+0.25,0.8,5))}>Zoom −</button>
         <button type="button" className="secondary" onClick={()=>{setAzimuth(-0.72);setElevation(0.64);setDistance(2.25)}}>Reset view</button>
@@ -95,7 +98,7 @@ export default function Skid3D({layout, values}) {
     <div className="orbitViewport" onPointerDown={e=>{drag.current={x:e.clientX,y:e.clientY,az:azimuth,el:elevation};e.currentTarget.setPointerCapture(e.pointerId)}} onPointerMove={e=>{
       if(!drag.current) return;
       setAzimuth(drag.current.az+(e.clientX-drag.current.x)*0.009);
-      setElevation(clamp(drag.current.el+(e.clientY-drag.current.y)*0.007,0.08,1.5));
+      setElevation(clamp(drag.current.el-(e.clientY-drag.current.y)*0.007,0,TOP_DOWN));
     }} onPointerUp={e=>{drag.current=null;if(e.currentTarget.hasPointerCapture(e.pointerId))e.currentTarget.releasePointerCapture(e.pointerId)}} onPointerCancel={()=>{drag.current=null}} onWheel={e=>setDistance(d=>clamp(d+Math.sign(e.deltaY)*0.17,0.8,5))}>
       <svg viewBox={`0 0 ${W} ${H}`} className="orbitSvg" role="img" aria-label="Interactive perspective 3D skid with orbit camera and zoom">
         <defs><linearGradient id="orbitBack" x1="0" x2="0" y1="0" y2="1"><stop stopColor="#e8f5fb"/><stop offset="1" stopColor="#f8fbff"/></linearGradient></defs>
@@ -104,7 +107,7 @@ export default function Skid3D({layout, values}) {
         {labels.map(l=><text key={l.id} x={l.at.x} y={l.at.y} textAnchor="middle" className="orbitLabel">{l.label.replace(' Tank','').replace(' Pump','')}</text>)}
       </svg>
     </div>
-    <div className="orbitFootnote">Skid schematic: {layout.usedLength.toFixed(2)} × {layout.usedWidth.toFixed(2)} m · Camera rotates around equipment in 3D, not the page image.</div>
+    <div className="orbitFootnote">Skid schematic: {layout.usedLength.toFixed(2)} × {layout.usedWidth.toFixed(2)} m · Use Top view to inspect the skid directly from above; drag to return to an angled view.</div>
     <p className="muted">Concept visualisation only: equipment footprints and heights are illustrative, not matched vendor dimensions. This is not a fabrication drawing or a structural, clearance, piping or safety assessment.</p>
   </div>;
 }
