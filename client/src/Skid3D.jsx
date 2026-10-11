@@ -75,10 +75,11 @@ export default function Skid3D({layout, values}) {
     }
     return solids;
   },[layout,values.maxSkidHeightM]);
+  // Painter's algorithm: render distant faces first so lids and upper surfaces remain visible.
   const projected=useMemo(()=>geometry.map(face=>{
     const points=face.p.map(v=>transform(v,azimuth,elevation,distance,2.95,1.175));
     return {...face,points,depth:points.reduce((sum,p)=>sum+p.depth,0)/points.length};
-  }).sort((a,b)=>b.depth-a.depth),[geometry,azimuth,elevation,distance]);
+  }).sort((a,b)=>a.depth-b.depth),[geometry,azimuth,elevation,distance]);
   const labels=useMemo(()=>layout?.equipment.map(eq=>{
     const h=eq.type==='tank'?1.55:eq.type==='control'?1.3:0.6;
     return {id:eq.id,label:eq.label,at:transform([eq.xM+Number(eq.length)/2,eq.yM+Number(eq.width)/2,h],azimuth,elevation,distance,2.95,1.175)};
