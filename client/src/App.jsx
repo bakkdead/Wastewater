@@ -198,8 +198,8 @@ export default function App() {
   };
 
   const loadSpnExample = () => {
-    setValues({...initialValues, projectName:"SPN Dairy pH Skid Example", siteName:"Example Dairy Facility", wastewaterSource:"Mixed dairy wastewater", averageFlowM3h:8, peakFlowM3h:12, operatingHoursPerDay:16, currentPh:5.2, targetPh:7, temperatureC:25, fogMgL:650, tssMgL:800, codMgL:3200, alkalinityMgLCaCO3:250, upstreamTreatment:"Screening and DAF", dischargePhMin:6, dischargePhMax:10, chemicalType:"alkali", chemicalName:"Sodium hydroxide", chemicalConcentrationPct:25, chemicalDensityKgL:1.28, titrationDoseMlPerL:0.8, dosingSafetyFactor:1.2, storageDays:7, maxSkidLengthM:5.9, maxSkidWidthM:2.35, maxSkidHeightM:2.5, powerSupply:"400 V three phase", controlMode:"Local automatic pH control", communicationProtocol:"Modbus TCP"});
-    setErrors({}); setDesign(null); setSelectedEquipment(null); setCalcError(""); setStep(0); setMeasuredPh("7.0"); setAutoEnabled(false); setStatus("SPN demonstration example loaded. Review the inputs, then calculate the design.");
+    setValues({...initialValues, projectName:"SPN Dairy pH Skid Example", siteName:"Example Dairy Facility", wastewaterSource:"Mixed dairy wastewater", averageFlowM3h:0.7, peakFlowM3h:1, operatingHoursPerDay:16, currentPh:5.2, targetPh:7, temperatureC:25, fogMgL:650, tssMgL:800, codMgL:3200, alkalinityMgLCaCO3:250, upstreamTreatment:"Screening and DAF", dischargePhMin:6, dischargePhMax:10, chemicalType:"alkali", chemicalName:"Sodium hydroxide", chemicalConcentrationPct:25, chemicalDensityKgL:1.28, titrationDoseMlPerL:0.3, dosingSafetyFactor:1.2, storageDays:2, maxSkidLengthM:5.9, maxSkidWidthM:2.35, maxSkidHeightM:2.5, powerSupply:"400 V three phase", controlMode:"Local automatic pH control", communicationProtocol:"Modbus TCP"});
+    setErrors({}); setDesign(null); setSelectedEquipment(null); setCalcError(""); setStep(0); setMeasuredPh("7.0"); setAutoEnabled(false); setStatus("SPN demonstration example loaded with catalogue-matched equipment. Click Calculate Skid Design to view the results (illustrative test inputs only).");
   };
 
   return (

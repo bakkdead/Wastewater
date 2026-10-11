@@ -143,3 +143,10 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .deleteSavedButton:hover { background:#912018; }
 .deleteSavedButton:focus-visible { outline:3px solid #f97066; outline-offset:2px; }
 @media (max-width:520px) { .savedEntry { flex-wrap:wrap; } .savedEntry .savedItem { flex-basis:100%; } }
+/* Interactive spatial 3D orbital camera */
+.threeDButtons { display:flex; gap:8px; flex-wrap:wrap; }
+.orbitViewport { width:100%; overflow:hidden; border:1px solid #c9dce6; border-radius:10px; margin:12px 0; cursor:grab; touch-action:none; user-select:none; background:#eaf5fb; }
+.orbitViewport:active { cursor:grabbing; }
+.orbitSvg { display:block; width:100%; height:auto; max-height:550px; }
+.orbitLabel { font:bold 12px Arial,sans-serif; fill:#163b51; paint-order:stroke; stroke:#fff; stroke-width:3px; stroke-linejoin:round; pointer-events:none; }
+.orbitFootnote { font-size:13px; color:#456577; font-weight:600; }
